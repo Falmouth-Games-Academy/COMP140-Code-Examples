@@ -16,7 +16,7 @@ Game::~Game()
 bool Game::Init()
 {
 	//Initialise SDL Library,, if we fail display an error message to the console
-	if (SDL_Init(SDL_INIT_VIDEO) < 0)
+	if (SDL_Init(SDL_INIT_VIDEO| SDL_INIT_TIMER) < 0)
 	{
 		std::cout << "Can't initialise SDL " << SDL_GetError() << std::endl;
 		return false;
@@ -59,6 +59,8 @@ bool Game::Init()
 	testSprite->SetDestinationRectangle(0, 0, 64, 64);
 
 	DisplayList.push_back(testSprite);
+
+	GameTimer.Start();
 
 	return true;
 }
@@ -123,20 +125,7 @@ void Game::Shutdown()
 
 void Game::Update()
 {
-	//SDL Event pump, keep Polling while we have events to handle
-	while (SDL_PollEvent(&CurrentEvent))
-	{
-		//Check the type of event
-		switch (CurrentEvent.type)
-		{
-			//If this is a quit message then stop the game loop
-			case SDL_QUIT:
-			{
-				Running = false;
-				break;
-			}
-		}
-	}
+
 
 	//Update our game
 	for (Sprite * s : DisplayList)
@@ -157,6 +146,54 @@ void Game::Render()
 
 	
 	SDL_RenderPresent(Renderer);
+}
+
+void Game::Run()
+{
+	float lag = 0.0f;
+	const float MS_PER_UPDATE = 0.01f;
+	
+	while (Running)
+	{
+		//SDL Event pump, keep Polling while we have events to handle
+		while (SDL_PollEvent(&CurrentEvent))
+		{
+			//Check the type of event
+			switch (CurrentEvent.type)
+			{
+				//If this is a quit message then stop the game loop
+				case SDL_QUIT:
+				{
+					Running = false;
+					break;
+				}
+			}
+		}
+
+		GameTimer.Update();
+
+		lag += GameTimer.GetElpasedTime();
+
+		ProcessInput();
+
+		while (lag >= MS_PER_UPDATE)
+		{
+			Update();
+			lag -= MS_PER_UPDATE;
+		}
+
+		Render();
+	}
+}
+
+void Game::ProcessInput()
+{
+	InputSystem.Update();
+	Keyboard * currentKeyboardState = InputSystem.GetKeyboard();
+	if (currentKeyboardState->IsKeyDown(SDL_SCANCODE_ESCAPE)) 
+	{
+		Running = false;
+	}
 }
 
 

@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Sprite.h"
+#include "Timer.h"
+#include "Input.h"
 
 class Game
 {
@@ -10,6 +12,10 @@ public:
 
 	virtual bool Init();
 	virtual void Shutdown();
+
+	void Run();
+
+	void ProcessInput();
 
 	virtual void Update();
 	virtual void Render();
@@ -28,5 +34,8 @@ protected:
 	bool Running;
 
 	std::vector<Sprite*> DisplayList;
+
+	Timer GameTimer;
+	Input InputSystem;
 
 };
